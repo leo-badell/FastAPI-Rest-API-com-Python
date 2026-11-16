@@ -1,4 +1,5 @@
 {
     "postman.settings.dotenv-detection-notification-visibility": false,
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "python.terminal.useEnvFile": true
 }
