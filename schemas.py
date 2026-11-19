@@ -11,10 +11,16 @@ class UsuarioSchema(BaseModel):
     class Config:
         from_attributes = True
 
-class PedidoSchema(BaseModel):
-    produto: str
-    quantidade: int
-    preco: float
+class LoginSchema(BaseModel):
+    email: str
+    senha: str
 
     class Config:
         from_attributes = True
+
+class PedidoSchema(BaseModel):
+    id_usuario: int
+
+    class Config:
+        from_attributes = True
+        
