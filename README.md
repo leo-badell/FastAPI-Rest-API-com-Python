@@ -26,23 +26,16 @@ API em FastAPI desenvolvida durante o curso: cadastro de usuários e base para u
 
 ### Rotas
 
+#### Autenticar (`/Autenticar`)
+
+![Rotas de autenticação no Swagger](docs/images/rotas-autenticar.png)
+
 | Método | Rota | Descrição |
 |---|---|---|
 | POST | `/Autenticar/criar_conta` | Cria um usuário comum (ativo, não admin). Erro 400 se o e-mail já existir. |
 | POST | `/Autenticar/login` | Login com JSON; devolve `access_token` e `refresh_token` (7 dias). |
 | POST | `/Autenticar/login-form` | Mesmo login, via formulário (usado pelo botão Authorize do Swagger). |
 | GET | `/Autenticar/refresh` | Recebe o **refresh token** e devolve um novo access token. |
-| POST | `/pedidos/pedido` | Cria um pedido (só para si mesmo, ou para qualquer um se admin). |
-| POST | `/pedidos/pedido/adicionar-item/{id_pedido}` | Adiciona item e recalcula o preço. `quantidade` e `preco` precisam ser > 0. |
-| POST | `/pedidos/pedido/remover-item/{id_item_pedido}` | Remove item e recalcula o preço. |
-| POST | `/pedidos/pedido/cancelar/{id_pedido}` | Muda o status para `Cancelado`. |
-| POST | `/pedidos/pedido/finalizar/{id_pedido}` | Muda o status para `Finalizado`. |
-| GET | `/pedidos/pedido/{id_pedido}` | Mostra um pedido com seus itens. |
-| GET | `/pedidos/pedidos` | Lista os pedidos do usuário logado. |
-| GET | `/pedidos/listar` | Lista todos os pedidos (só admin). |
-
-Todas as rotas de `/pedidos` exigem o access token. Só pedidos `Pendente` aceitam adicionar/remover itens ou ser finalizados.
-Admin não é definido pela API: mude a coluna `admin` direto no banco.
 
 Exemplo de corpo para `/Autenticar/criar_conta`:
 
@@ -51,6 +44,40 @@ Exemplo de corpo para `/Autenticar/criar_conta`:
   "nome": "Fulano",
   "email": "fulano@exemplo.com",
   "senha": "minhasenha"
+}
+```
+
+#### Pedidos (`/pedidos`)
+
+![Rotas de pedidos no Swagger](docs/images/rotas-pedidos.png)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/pedidos/pedido` | Cria um pedido (só para si mesmo, ou para qualquer um se admin). Corpo: `{"id_usuario": 1}`. |
+| POST | `/pedidos/pedido/cancelar/{id_pedido}` | Muda o status para `Cancelado` e devolve o pedido. |
+| GET | `/pedidos/listar` | Lista todos os pedidos (só admin). |
+| POST | `/pedidos/pedido/adicionar-item/{id_pedido}` | Adiciona item e recalcula o preço. Devolve `item_id` e `pedido_preco`. |
+| POST | `/pedidos/pedido/remover-item/{id_item_pedido}` | Remove item e recalcula o preço. Devolve `quantidade_itens_pedido` e `pedido_preco`. |
+| POST | `/pedidos/pedido/finalizar/{id_pedido}` | Muda o status para `Finalizado` e devolve o pedido. |
+| GET | `/pedidos/pedido/{id_pedido}` | Mostra um pedido com seus itens (`id`, `status`, `preco`, `itens`). |
+| GET | `/pedidos/pedidos` | Lista os pedidos do usuário logado, cada um com seus itens. |
+
+Regras:
+
+- Todas as rotas de `/pedidos` exigem o access token (cadeado no Swagger).
+- Usuário comum só acessa os próprios pedidos; admin acessa todos. Caso contrário: **401**.
+- Pedido ou item inexistente: **404**.
+- Só pedidos `Pendente` aceitam adicionar/remover itens ou ser finalizados; senão: **400**.
+- Admin não é definido pela API: mude a coluna `admin` direto no banco.
+
+Exemplo de corpo para `/pedidos/pedido/adicionar-item/{id_pedido}` (`quantidade` e `preco` precisam ser > 0):
+
+```json
+{
+  "quantidade": 2,
+  "sabor": "Calabresa",
+  "tamanho": "Grande",
+  "preco": 45.0
 }
 ```
 
