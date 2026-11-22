@@ -8,13 +8,15 @@ API em FastAPI desenvolvida durante o curso: cadastro de usuários e base para u
 
 | Arquivo | Função |
 |---|---|
-| `main.py` | Cria o app FastAPI, carrega o `.env` (`SECRET_KEY`), configura o `bcrypt_context` (hash de senhas com passlib/bcrypt) e registra os routers. |
+| `main.py` | Cria o app FastAPI e registra os routers. |
+| `config.py` | Carrega o `.env` (`SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`), configura o `bcrypt_context` (hash de senhas) e o `oauth2_schema`. |
 | `models.py` | Modelos do banco (SQLAlchemy) e conexão com `sqlite:///banco.db`. |
-| `schemas.py` | Schemas Pydantic de validação do corpo das requisições. |
-| `dependencies.py` | `pegar_sessao()`: dependência que abre e fecha a sessão do banco a cada requisição. |
+| `schemas.py` | Schemas Pydantic de validação das requisições e respostas. |
+| `dependencies.py` | `pegar_sessao()` abre e fecha a sessão do banco; `verificar_token()` / `verificar_refresh_token()` validam o JWT e devolvem o usuário. |
 | `auth_routes.py` | Rotas de autenticação/cadastro (`/Autenticar`). |
 | `order_routes.py` | Rotas de pedidos (`/pedidos`). |
-| `alembic/` + `alembic.ini` | Migrações do banco (migração inicial já criada). |
+| `test_api.py` | Testes das rotas (banco em memória, não toca no `banco.db`). |
+| `alembic/` + `alembic.ini` | Migrações do banco. |
 
 ### Banco de dados (tabelas)
 
@@ -26,9 +28,21 @@ API em FastAPI desenvolvida durante o curso: cadastro de usuários e base para u
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/Autenticar/` | Rota padrão de autenticação. |
-| POST | `/Autenticar/criar_conta` | Cria um usuário. Recebe JSON (`UsuarioSchema`), salva a senha com hash bcrypt e retorna erro 400 se o e-mail já existir. |
-| GET | `/pedidos/` | Rota padrão de pedidos (lista ainda fixa). |
+| POST | `/Autenticar/criar_conta` | Cria um usuário comum (ativo, não admin). Erro 400 se o e-mail já existir. |
+| POST | `/Autenticar/login` | Login com JSON; devolve `access_token` e `refresh_token` (7 dias). |
+| POST | `/Autenticar/login-form` | Mesmo login, via formulário (usado pelo botão Authorize do Swagger). |
+| GET | `/Autenticar/refresh` | Recebe o **refresh token** e devolve um novo access token. |
+| POST | `/pedidos/pedido` | Cria um pedido (só para si mesmo, ou para qualquer um se admin). |
+| POST | `/pedidos/pedido/adicionar-item/{id_pedido}` | Adiciona item e recalcula o preço. `quantidade` e `preco` precisam ser > 0. |
+| POST | `/pedidos/pedido/remover-item/{id_item_pedido}` | Remove item e recalcula o preço. |
+| POST | `/pedidos/pedido/cancelar/{id_pedido}` | Muda o status para `Cancelado`. |
+| POST | `/pedidos/pedido/finalizar/{id_pedido}` | Muda o status para `Finalizado`. |
+| GET | `/pedidos/pedido/{id_pedido}` | Mostra um pedido com seus itens. |
+| GET | `/pedidos/pedidos` | Lista os pedidos do usuário logado. |
+| GET | `/pedidos/listar` | Lista todos os pedidos (só admin). |
+
+Todas as rotas de `/pedidos` exigem o access token. Só pedidos `Pendente` aceitam adicionar/remover itens ou ser finalizados.
+Admin não é definido pela API: mude a coluna `admin` direto no banco.
 
 Exemplo de corpo para `/Autenticar/criar_conta`:
 
@@ -36,9 +50,7 @@ Exemplo de corpo para `/Autenticar/criar_conta`:
 {
   "nome": "Fulano",
   "email": "fulano@exemplo.com",
-  "senha": "minhasenha",
-  "ativo": true,
-  "admin": false
+  "senha": "minhasenha"
 }
 ```
 
@@ -62,10 +74,12 @@ pip install -r requirements.txt
 
 ### 3. Criar o arquivo `.env`
 
-Crie um arquivo `.env` na raiz com a variável abaixo (ele está no `.gitignore` e **não** deve ser commitado):
+Crie um arquivo `.env` na raiz com as variáveis abaixo (ele está no `.gitignore` e **não** deve ser commitado). As três são obrigatórias: sem elas a API não sobe.
 
 ```
 SECRET_KEY=coloque_uma_chave_aleatoria_aqui
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 Para gerar uma chave aleatória:
@@ -101,3 +115,9 @@ Se a porta 8000 estiver ocupada: `uvicorn main:app --reload --port 8001`
 - ReDoc: http://127.0.0.1:8000/redoc
 
 Para parar o servidor: `Ctrl + C`.
+
+### 7. Rodar os testes
+
+```powershell
+python -m pytest
+```

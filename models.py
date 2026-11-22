@@ -27,12 +27,6 @@ class Usuario(Base):
 class Pedido(Base):
     __tablename__ = "pedidos"
 
-    # STATUS_PEDIDOS = (
-    #     ("Pendente", "Pendente"),
-    #     ("Cancelado", "Cancelado"), 
-    #     ("Concluído", "Concluído")
-    # )
-    
     id = Column("id", Integer, primary_key=True, autoincrement=True) # pyright: ignore[reportUnknownVariableType]
     status = Column("status", String, nullable=False) 
     usuario_id = Column("usuario_id", Integer, ForeignKey("usuarios.id"), nullable=False)
