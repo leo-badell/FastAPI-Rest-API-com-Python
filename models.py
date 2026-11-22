@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, ForeignKey
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 
 Base = declarative_base()
@@ -44,8 +44,14 @@ class Pedido(Base):
         self.preco = preco
         self.status = status
 
+    itens = relationship("ItemPedido")
+
+    def calcular_preco(self):
+        self.preco = sum(item.preco * item.quantidade for item in self.itens)
+
+
 # ItensPedido
-class ItensPedido(Base):
+class ItemPedido(Base):
     __tablename__ = "itens_pedido"
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     quantidade = Column("quantidade", Integer, nullable=False)

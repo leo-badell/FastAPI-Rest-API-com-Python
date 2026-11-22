@@ -5,8 +5,8 @@ class UsuarioSchema(BaseModel):
     nome: str
     email: str
     senha: str
-    ativo: Optional[bool]
-    admin: Optional[bool]
+    ativo: Optional[bool] = True
+    admin: Optional[bool] = False
 
     class Config:
         from_attributes = True
@@ -20,6 +20,16 @@ class LoginSchema(BaseModel):
 
 class PedidoSchema(BaseModel):
     id_usuario: int
+
+    class Config:
+        from_attributes = True
+
+
+class ItemPedidoSchema(BaseModel):
+    quantidade: int
+    sabor: str
+    tamanho: str
+    preco: float
 
     class Config:
         from_attributes = True
