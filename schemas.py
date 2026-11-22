@@ -1,15 +1,11 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field, AliasChoices
+from typing import List
 
-from sqlalchemy import String
-from sqlalchemy.orm import relationship
 
 class UsuarioSchema(BaseModel):
     nome: str
     email: str
     senha: str
-    ativo: Optional[bool] = True
-    admin: Optional[bool] = False
 
     class Config:
         from_attributes = True
@@ -29,10 +25,11 @@ class PedidoSchema(BaseModel):
 
 
 class ItemPedidoSchema(BaseModel):
-    quantidade: int
+    quantidade: int = Field(gt=0)
     sabor: str
     tamanho: str
-    preco: float
+    # "preco" no JSON da requisição; "preco_unitario" ao ler do model ItemPedido
+    preco: float = Field(gt=0, validation_alias=AliasChoices("preco", "preco_unitario"))
 
     class Config:
         from_attributes = True
@@ -46,4 +43,3 @@ class ResponsePedidoSchema(BaseModel):
 
     class Config:
         from_attributes = True
-        

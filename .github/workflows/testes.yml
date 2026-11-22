@@ -1,0 +1,23 @@
+name: Testes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      # SECRET_KEY/ALGORITHM/ACCESS_TOKEN_EXPIRE_MINUTES: o test_api.py define valores de teste, não precisa de .env nem de secrets
+      - name: Rodar testes
+        run: python -m pytest
