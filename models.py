@@ -24,7 +24,6 @@ class Usuario(Base):
         self.admin = admin
 
 # Pedido
-
 class Pedido(Base):
     __tablename__ = "pedidos"
 
@@ -38,16 +37,15 @@ class Pedido(Base):
     status = Column("status", String, nullable=False) 
     usuario_id = Column("usuario_id", Integer, ForeignKey("usuarios.id"), nullable=False)
     preco = Column("preco", Float, nullable=False)
+    itens = relationship("ItemPedido", cascade="all, delete", backref="pedido")
 
     def __init__(self, usuario_id, status="Pendente", preco=0):
         self.usuario_id = usuario_id
         self.preco = preco
         self.status = status
 
-    itens = relationship("ItemPedido")
-
     def calcular_preco(self):
-        self.preco = sum(item.preco * item.quantidade for item in self.itens)
+        self.preco = sum(item.preco_unitario * item.quantidade for item in self.itens)
 
 
 # ItensPedido
@@ -57,7 +55,7 @@ class ItemPedido(Base):
     quantidade = Column("quantidade", Integer, nullable=False)
     sabor = Column("sabor", String, nullable=False)
     tamanho = Column("tamanho", String, nullable=False)
-    preco = Column("preco", Float, nullable=False)
+    preco_unitario = Column("preco", Float, nullable=False)
     pedido_id = Column("pedido_id", Integer, ForeignKey("pedidos.id"), nullable=False)
     
     
@@ -67,7 +65,7 @@ class ItemPedido(Base):
         self.sabor = sabor
         self.tamanho = tamanho
         self.quantidade = quantidade
-        self.preco = preco
+        self.preco_unitario = preco
 
 # Executa a criação dos metadados do seu banco (cria efetivamente o banco)
 # Base.metadata.create_all(db)
